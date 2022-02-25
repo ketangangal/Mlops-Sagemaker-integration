@@ -11,3 +11,13 @@ python main.py alpha l1_ratio
 ```commandline
 mlflow ui
 ```
+### PREREQUISITES 
+1. Install AWS CLI 
+2. Open Cmd : aws configure
+3. Paste Public key , private key and Region 
+4. Run below command
+
+### Send Ml-runs on Aws-S3 Bucket
+```commandline
+python utils/sagemaker_integration.py
+```
