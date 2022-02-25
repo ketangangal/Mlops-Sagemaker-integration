@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/win10/OneDrive/Desktop/Aiops/Mlops-Sagemaker-integration/mlruns/0/e06d70afa459462cbc6194a35f36b539/artifacts
+end_time: 1645774488142
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+name: ''
+run_id: e06d70afa459462cbc6194a35f36b539
+run_uuid: e06d70afa459462cbc6194a35f36b539
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1645774485847
+status: 3
+tags: []
+user_id: win10
