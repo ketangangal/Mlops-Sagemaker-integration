@@ -1,6 +1,6 @@
 import warnings
 import sys
-
+import os
 import pandas as pd
 import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
@@ -10,6 +10,9 @@ from urllib.parse import urlparse
 import mlflow.sklearn
 
 import logging
+
+from utils.sagemaker_integration import upload
+from from_root import from_root
 
 logging.basicConfig(level=logging.WARN)
 logger = logging.getLogger(__name__)
@@ -75,3 +78,13 @@ if __name__ == "__main__":
             mlflow.sklearn.log_model(lr, "model", registered_model_name="ElasticnetWineModel")
         else:
             mlflow.sklearn.log_model(lr, "model")
+
+        # Push model in s3 bucket
+        try:
+            if input("Push Model To s3 (Y or N): ") == 'Y':
+                runs = os.path.join(from_root(), 'mlruns/')
+                print("Path to mlruns Exists :", os.path.exists(runs))
+                status = upload(s3_bucket_name='mlops-sagemaker-runs-exp', mlruns_direc=runs)
+                print(status)
+        except Exception as e:
+            print(f"Error occured : {e.__str__()}")
