@@ -80,11 +80,11 @@ if __name__ == "__main__":
             mlflow.sklearn.log_model(lr, "model")
 
         # Push model in s3 bucket
-        try:
-            if input("Push Model To s3 (Y or N): ") == 'Y':
-                runs = os.path.join(from_root(), 'mlruns/')
-                print("Path to mlruns Exists :", os.path.exists(runs))
-                status = upload(s3_bucket_name='mlops-sagemaker-runs-exp', mlruns_direc=runs)
-                print(status)
-        except Exception as e:
-            print(f"Error occured : {e.__str__()}")
+        # try:
+        #     if input("Push Model To s3 (Y or N): ") == 'Y':
+        #         runs = os.path.join(from_root(), 'mlruns/')
+        #         print("Path to mlruns Exists :", os.path.exists(runs))
+        #         status = upload(s3_bucket_name='mlops-sagemaker-runs-exp', mlruns_direc=runs)
+        #         print(status)
+        # except Exception as e:
+        #     print(f"Error occured : {e.__str__()}")
