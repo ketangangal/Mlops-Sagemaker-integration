@@ -45,8 +45,21 @@ def deploy_model_aws_sagemaker(config=None):
         return f"Error Occurred while Deploying : {e.__str__()} "
 
 
-def make_prediction():
-    pass
+def query(input_json, config):
+    try:
+        app_name = config['params']['app_name']
+        region = config['params']['region']
+        client = boto3.session.Session().client("sagemaker-runtime", region)
+        response = client.invoke_endpoint(
+            EndpointName=app_name,
+            Body=input_json,
+            ContentType='application/json; format=pandas-split',
+        )
+        preds = response['Body'].read().decode("ascii")
+        preds = json.loads(preds)
+        return preds
+    except Exception as e:
+        return f"Error Occurred While Prediction : {e.__str__()}"
 
 
 def switching_models():
