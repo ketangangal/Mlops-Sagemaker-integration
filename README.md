@@ -30,7 +30,7 @@ mlflow sagemaker build-and-push-container
 ## Run Server
 ```
 mlflow server
---backend-store-uri mysql://admin:blackpanther@database-1.ctn6vycs4wym.ap-south-1.rds.amazonaws.com/mlops
+--backend-store-uri mysql://admin:pass@endpoint/DB-name
 --default-artifact-root ./artifacts
 --host 127.0.0.1
 -p 5000
