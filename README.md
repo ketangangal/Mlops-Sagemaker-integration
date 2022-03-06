@@ -44,6 +44,12 @@ python utils/sagemaker_integration.py
 ```
 
 
+## Check Errors If occurred try:
+```
+docker.errors.DockerException: Install pypiwin32 package to enable npipe:// support
+Solution : Instead of pip install pypiwin32  Try : conda install -c anaconda pywin32
+```
+
 
 
 
