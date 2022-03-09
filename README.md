@@ -1,4 +1,5 @@
 # Mlops-Sagemaker-integration
+## MLFlow provides explicit AWS SageMaker support in its operationalization code.
 ```
 create --prefix ./env python=3.8 -y && conda activate ./env 
 ```
@@ -28,7 +29,9 @@ mlflow ui
 python utils/sagemaker_integration.py
 ```
 
-
-
+### To build and Push Container
+```commandline
+mlflow sagemaker build-and-push-container
+```
 
 
