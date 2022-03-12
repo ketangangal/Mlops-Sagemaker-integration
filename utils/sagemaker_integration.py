@@ -1,107 +1,74 @@
 import subprocess
-import os
-from from_root import from_root
 import boto3
 import mlflow.sagemaker as mfs
 import json
 
 
-def upload(s3_bucket_name=None, mlruns_direc=None):
-    try:
-        output = subprocess.run(["aws", "s3", "sync", "{}".format(mlruns_direc),
-                                 "s3://{}".format(s3_bucket_name)],
-                                stdout=subprocess.PIPE,
-                                encoding='utf-8')
+class sagemaker_integration:
+    def __init__(self, config=None):
+        self.config = config
 
-        print("\nSaved to bucket: ", s3_bucket_name)
-        return f"Done Uploading : {output.stdout}"
+    def upload(self, path_to_artifact=None):
+        try:
+            output = subprocess.run(["aws", "s3", "sync", "{}".format(path_to_artifact),
+                                     "s3://{}".format(self.config['aws_s3_bucket_config']['s3_bucket_name'])],
+                                    stdout=subprocess.PIPE,
+                                    encoding='utf-8')
 
-    except Exception as e:
-        return f"Error Occurred While Uploading : {e.__str__()}"
+            return f"Done Uploading : {output.stdout}"
 
+        except Exception as e:
+            return f"Error Occurred While Uploading : {e.__str__()}"
 
-def deploy_model_aws_sagemaker(config=None):
-    try:
-        app_name = config['params']['app_name']
-        execution_role_arn = config['params']['execution_role_arn']
-        image_ecr_url = config['params']['image_ecr_url']
-        region = config['params']['region']
-        s3_bucket_name = config['params']['s3_bucket_name']
-        experiment_id = config['params']['experiment_id']
-        run_id = config['params']['run_id']
-        model_name = config['params']['model_name']
+    def deploy_model_aws_sagemaker(self):
+        try:
+            model_uri = "s3://{}/{}/{}/artifacts/{}/".format(self.config['aws_s3_bucket_config']['s3_bucket_name'],
+                                                             self.config['aws_endpoint_config']['experiment_id'],
+                                                             self.config['aws_endpoint_config']['run_id'],
+                                                             self.config['aws_endpoint_config']['model_name'])
+            mfs.deploy(app_name=self.config['aws_sagemaker_config']['app_name'],
+                       model_uri=model_uri,
+                       execution_role_arn=self.config['sagemaker_role_name']['execution_role_arn'],
+                       region_name=self.config['aws_access_config']['region'],
+                       image_url=self.config['aws_ecr_config']['image_ecr_url'],
+                       mode=mfs.DEPLOYMENT_MODE_CREATE)
+            return "Deployment Successfully"
+        except Exception as e:
+            return f"Error Occurred while Deploying : {e.__str__()} "
 
-        model_uri = "s3://{}/{}/{}/artifacts/{}/".format(s3_bucket_name, experiment_id, run_id, model_name)
-        print(model_uri)
-        mfs.deploy(app_name=app_name,
-                   model_uri=model_uri,
-                   execution_role_arn=execution_role_arn,
-                   region_name=region,
-                   image_url=image_ecr_url,
-                   mode=mfs.DEPLOYMENT_MODE_CREATE)
+    def query(self, input_json):
+        try:
+            client = boto3.session.Session().client("sagemaker-runtime", self.config['aws_access_config']['region'])
+            response = client.invoke_endpoint(
+                EndpointName=self.config['aws_sagemaker_config']['app_name'],
+                Body=input_json,
+                ContentType='application/json; format=pandas-split')
+            return json.loads(response['Body'].read().decode("ascii"))
+        except Exception as e:
+            return f"Error Occurred While Prediction : {e.__str__()}"
 
-        return "Deployment Successfully"
-    except Exception as e:
-        return f"Error Occurred while Deploying : {e.__str__()} "
+    def switching_models(self):
+        try:
+            new_model_uri = "s3://{}/{}/{}/artifacts/{}/".format(self.config['aws_s3_bucket_config']['s3_bucket_name'],
+                                                                 self.config['aws_endpoint_config']['experiment_id'],
+                                                                 self.config['aws_endpoint_config']['run_id'],
+                                                                 self.config['aws_endpoint_config']['model_name'])
 
+            mfs.deploy(app_name=self.config['aws_sagemaker_config']['app_name'], model_uri=new_model_uri,
+                       execution_role_arn=self.config['aws_sagemaker_config']['execution_role_arn'],
+                       region_name=self.config['aws_access_config']['region'],
+                       image_url=self.config['aws_ecr_config']['image_ecr_url'],
+                       mode=mfs.DEPLOYMENT_MODE_REPLACE)
 
-def query(input_json, config=None):
-    try:
-        app_name = config['params']['app_name']
-        region = config['params']['region']
-        client = boto3.session.Session().client("sagemaker-runtime", region)
-        response = client.invoke_endpoint(
-            EndpointName=app_name,
-            Body=input_json,
-            ContentType='application/json; format=pandas-split',
-        )
-        preds = response['Body'].read().decode("ascii")
-        preds = json.loads(preds)
-        return preds
-    except Exception as e:
-        return f"Error Occurred While Prediction : {e.__str__()}"
+            return f"Model Successfully switched "
 
+        except Exception as e:
+            return f"Error While Changing Model : {e.__str__()}"
 
-def switching_models(config=None):
-    try:
-        app_name = config['params']['app_name']
-        execution_role_arn = config['params']['execution_role_arn']
-        image_ecr_url = config['params']['image_ecr_url']
-        region = config['params']['region']
-        s3_bucket_name = config['params']['s3_bucket_name']
-        experiment_id = config['params']['experiment_id']
-        new_run_id = config['params']['run_id']
-        model_name = config['params']['model_name']
-
-        new_model_uri = "s3://{}/{}/{}/artifacts/{}/".format(s3_bucket_name, experiment_id, new_run_id, model_name)
-
-        response = mfs.deploy(app_name=app_name,
-                              model_uri=new_model_uri,
-                              execution_role_arn=execution_role_arn,
-                              region_name=region,
-                              image_url=image_ecr_url,
-                              mode=mfs.DEPLOYMENT_MODE_REPLACE)
-
-        return f"Model Successfully Changed : {new_run_id}"
-
-    except Exception as e:
-        return f"Error While Changing Model : {e.__str__()}"
-
-
-def remove_deployed_model(config=None):
-    try:
-        app_name = config['params']['app_name']
-        region = config['params']['region']
-
-        mfs.delete(app_name=app_name, region_name=region)
-        return f"Endpoint Successfully Deleted : {app_name}"
-
-    except Exception as e:
-        return f"Error While Deleting EndPoint : {e.__str__()}"
-
-
-if __name__ == "__main__":
-    runs = os.path.join(from_root(), 'mlruns/')
-    print("Path to mlruns Exists :", os.path.exists(runs))
-    status = upload(s3_bucket_name='mlops-sagemaker-runs-exp', mlruns_direc=runs)
-    print(status)
+    def remove_deployed_model(self):
+        try:
+            mfs.delete(app_name=self.config['aws_sagemaker_config']['app_name'],
+                       region_name=self.config['aws_access_config']['region'])
+            return f"Endpoint Successfully Deleted : {self.config['aws_sagemaker_config']['app_name']}"
+        except Exception as e:
+            return f"Error While Deleting EndPoint : {e.__str__()}"
