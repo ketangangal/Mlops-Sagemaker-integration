@@ -11,7 +11,7 @@ import mlflow.sklearn
 
 import logging
 
-from utils.sagemaker_integration import upload
+from utils.sagemaker_integration import sagemaker_integration
 from from_root import from_root
 
 logging.basicConfig(level=logging.WARN)
@@ -29,7 +29,6 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore")
     np.random.seed(40)
 
-    # Read the wine-quality csv file from the URL
     csv_url = (
         "http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv"
     )
@@ -53,6 +52,8 @@ if __name__ == "__main__":
     alpha = float(sys.argv[1]) if len(sys.argv) > 1 else 0.5
     l1_ratio = float(sys.argv[2]) if len(sys.argv) > 2 else 0.5
 
+    mlflow.set_tracking_uri("http://127.0.0.1:5000")
+
     with mlflow.start_run():
         lr = ElasticNet(alpha=alpha, l1_ratio=l1_ratio, random_state=42)
         lr.fit(train_x, train_y)
@@ -74,18 +75,17 @@ if __name__ == "__main__":
 
         tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
 
-        # Model registry does not work with file store
         if tracking_url_type_store != "file":
             mlflow.sklearn.log_model(lr, "model", registered_model_name="ElasticnetWineModel")
         else:
             mlflow.sklearn.log_model(lr, "model")
 
-        # Push model in s3 bucket
         try:
             if input("Push Model To s3 (Y or N): ") == 'Y':
-                runs = os.path.join(from_root(), 'mlruns/')
-                print("Path to mlruns Exists :", os.path.exists(runs))
-                status = upload(s3_bucket_name='mlops-sagemaker-runs-exp', mlruns_direc=runs)
+                runs = os.path.join(from_root(), 'artifacts/')
+                aws_config = os.path.join(from_root(), 'aws_configurations', 'aws_config.yaml')
+                s3_upload = sagemaker_integration(aws_config)
+                status = s3_upload.upload(runs)
                 print(status)
         except Exception as e:
-            print(f"Error occured : {e.__str__()}")
+            print(f"Error occurred : {e.__str__()}")
