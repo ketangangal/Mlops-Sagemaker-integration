@@ -1,0 +1,46 @@
+aws_access_config:
+  access_key: "AKIA6B5GUWRZEC3LCCUJ"
+  secret_key: "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"
+  account_id: "966180254834"
+  region: "ap-south-1"
+
+aws_s3_bucket_config:
+  s3_bucket_name: "mlops-experiment-s3"
+
+aws_sagemaker_config:
+  app_name: "mlops-experiment-app"
+  sagemaker_role_name: "mlops-experiment-role"
+  execution_role_arn: "arn:aws:iam::966180254834:role/mlops-experiment-role"
+
+aws_ecr_config:
+  docker_image_name: "mlops-experiment-app-image"
+  image_ecr_url: "966180254834.dkr.ecr.ap-south-1.amazonaws.com/mlops-experiment-app-image"
+
+aws_endpoint_config:
+  experiment_id: "0"
+  run_id: "8f768d3a7f62412c91b6a9627ef19b39"
+  model_name: "model"
+
+aws_database_config:
+  identifier: "mlops-experiment"
+  engine: "mysql"
+  database_name: "mlops"
+  mysql_username: "admin"
+  mysql_password: "mlops1234"
+  engine_version: "8.0"
+  instance_class: "db.t2.micro"
+  allocated_storage: "20"
+  skip_final_snapshot: "true"
+  parameter_group_name: "default.mysql8.0"
+  mysql_instance_name: "mlops-experiment-mysql"
+  security_group_name: "mlops-mysql-security-group"
+  vpc_id: "vpc-04988da276151ec45"
+  publicly_accessible: "true"
+  aws_database_config: "Place-Holder"
+
+
+
+
+
+
+
